@@ -3,7 +3,8 @@ import requests
 import json
 
 
-class YellowPagesScrap:
+class YellowPagesScraper:
+
     def __init__(self,category: str , borough: str , city: str):
         self.headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -17,6 +18,7 @@ class YellowPagesScrap:
             "Sec-Fetch-Site": "same-origin"
         }
         self.url_search_path = f"https://www.yellowpages.com/search?search_terms={category}&geo_location_terms={borough}%2C+{city}&s=average_rating"
+
 
     def get_business_list(self)->dict: 
         try:
@@ -54,8 +56,10 @@ class YellowPagesScrap:
             print(f"[Business_list] Failed: {e}")
             return {}
         
+
     def get_url(self)->str:
         return self.url_search_path
+
 
     def get_individual_object(self,soup_object,tag,attrs)->str:
         try:
@@ -67,6 +71,7 @@ class YellowPagesScrap:
             print(f"[get_business_insight] Failed: {e}")
             return "N/A"
         
+
     def decode_cloudflare_email(self,cf_hex)->str:
         try:
             key = int(cf_hex[:2], 16)
@@ -78,7 +83,8 @@ class YellowPagesScrap:
         except (ValueError, IndexError) as e:
             print(f"[decode_cloudflare_email] Failed: {e}")
             return "N/A"
-        
+
+
     def get_business_insight(self,target_url)->dict:
         try:
             response = requests.get(target_url,headers=self.headers)

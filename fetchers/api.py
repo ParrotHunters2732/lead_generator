@@ -1,6 +1,7 @@
 import requests
 
-class Get_Api():
+
+class GetGekcoApi():
     base_url = "https://api.coingecko.com/api/v3/coins/markets"
     def __init__(self,key):
         self.api_key = key
@@ -16,7 +17,7 @@ class Get_Api():
             "x-cg-demo-api-key": f"{self.api_key}" 
         }
 
-        response = requests.get(Get_Api.base_url, params=params, headers=headers)
+        response = requests.get(GetGekcoApi.base_url, params=params, headers=headers)
         if response.status_code == 200:
             data = response.json()
             
