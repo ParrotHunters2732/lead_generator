@@ -3,7 +3,7 @@ import requests
 import json
 
 
-class YellowpagesScrap:
+class YellowPagesScrap:
     def __init__(self,category: str , borough: str , city: str):
         self.headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -17,27 +17,10 @@ class YellowpagesScrap:
             "Sec-Fetch-Site": "same-origin"
         }
         self.url_search_path = f"https://www.yellowpages.com/search?search_terms={category}&geo_location_terms={borough}%2C+{city}&s=average_rating"
-    
-    def get_business_list(self):
-        try:
-            response = requests.get(self.url_search_path,headers=self.headers)
-            return response
-        except requests.HTTPError as e:
-            print(f"[get_business_insight] HTTP Error: {e}")
-            return {}
-        except requests.ConnectionError:
-            print("[get_business_insight] Connection Failed")
-            return {}
-        except requests.Timeout:
-            print("[get_business_insight] Timed Out")
-            return {}
-        except Exception as e:
-            print(f"[get_business_insight] Failed: {e}")
-            return {}
 
-
-    def find_object(self,response)->dict: 
+    def get_business_list(self)->dict: 
         try:
+            response = (requests.get(self.url_search_path,headers=self.headers)).content
             soup = BeautifulSoup(response,'html.parser')
             target_html_element = soup.find_all('script', type="application/ld+json")
             stringtojson = json.loads(str(target_html_element[1].string))
@@ -58,14 +41,20 @@ class YellowpagesScrap:
                 }
                 final_clean_data.append(clean_data)
             return final_clean_data
-        except (json.JSONDecodeError, IndexError) as e:
-            print(f"[find_object] Failed: {e}")
+        except requests.HTTPError as e:
+            print(f"[Business_list] HTTP Error: {e}")
+            return {}
+        except requests.ConnectionError:
+            print("[Business_list] Connection Failed")
+            return {}
+        except requests.Timeout:
+            print("[Business_list] Timed Out")
             return {}
         except Exception as e:
-            print(f"[find_object] Failed: {e}")
+            print(f"[Business_list] Failed: {e}")
             return {}
         
-    def get_url(self):
+    def get_url(self)->str:
         return self.url_search_path
 
     def get_individual_object(self,soup_object,tag,attrs)->str:
@@ -78,7 +67,7 @@ class YellowpagesScrap:
             print(f"[get_business_insight] Failed: {e}")
             return "N/A"
         
-    def decode_cloudflare_email(self,cf_hex):
+    def decode_cloudflare_email(self,cf_hex)->str:
         try:
             key = int(cf_hex[:2], 16)
             email = ""
@@ -90,7 +79,7 @@ class YellowpagesScrap:
             print(f"[decode_cloudflare_email] Failed: {e}")
             return "N/A"
         
-    def get_business_insight(self,target_url):
+    def get_business_insight(self,target_url)->dict:
         try:
             response = requests.get(target_url,headers=self.headers)
             soup = BeautifulSoup(response.text , 'html.parser')
@@ -172,10 +161,4 @@ class YellowpagesScrap:
         except Exception as e:
             print(f"[get_business_insight] Failed: {e}")
             return {}
-
-url_path = YellowpagesScrap("air conditioning service repair","NewYork","NYC")
-website = url_path.get_business_insight(target_url="https://www.yellowpages.com/los-angeles-ca/mip/marouch-restaurant-465004155")
-
-print(website)
-
 
