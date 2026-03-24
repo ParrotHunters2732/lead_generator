@@ -1,7 +1,7 @@
 from models import BusinessInsightData , BusinessListData
 from scraper.yellowpages import YellowPagesScraper
 from fetchers.api import GetGekcoApi
-from database.supabase import ReadData , WriteData
+from database.supabase import Reader , Writer
 from dotenv import load_dotenv
 import os
 import time

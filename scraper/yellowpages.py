@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 import json
+import time
 
 
 class YellowPagesScraper:
@@ -25,6 +26,16 @@ class YellowPagesScraper:
             response = (requests.get(self.url_search_path,headers=self.headers)).content
             soup = BeautifulSoup(response,'html.parser')
             target_html_element = soup.find_all('script', type="application/ld+json")
+            if not target_html_element:
+                for i in range(start=1, stop=6, step=1):
+                    target_html_element = soup.find_all('script', type="application/ld+json")
+                    if not target_html_element:
+                        print(f"attemps : {i}")
+                        print(f"Response Status Code: {response.status_code}")
+                        time.sleep(10.0)
+                        continue
+                    elif target_html_element:
+                        break
             stringtojson = json.loads(str(target_html_element[1].string))
             final_clean_data = []
             for item in stringtojson:
@@ -42,7 +53,7 @@ class YellowPagesScraper:
                     "opening_hours": item.get('openingHours' , "N/A"),
                 }
                 final_clean_data.append(clean_data)
-            return final_clean_data
+            return stringtojson
         except requests.HTTPError as e:
             print(f"[Business_list] HTTP Error: {e}")
             return {}

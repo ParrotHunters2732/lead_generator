@@ -2,6 +2,7 @@
     "pages_per_run": 0,
     "rate_min" : 0,
     "rate_max" : 0,
+    "max_attempt": 0,
     "word_randomizer": false,
     "categories": [],
     "locations": [],

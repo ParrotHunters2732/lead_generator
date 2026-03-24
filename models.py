@@ -14,7 +14,7 @@ class BusinessListData(BaseModel):
     telephone: Optional[str] = None
     opening_hours: Optional[str] = None
 
-    @field_validator('*', model='before')
+    @field_validator('*', mode='before')
     @classmethod
     def empty_to_none(cls , v):
         if v != "N/A":
@@ -41,3 +41,17 @@ class BusinessInsightData(BaseModel):
         if v != "N/A":
             return v
         return None
+    
+class Config_json(BaseModel):
+    page_per_request: int = 0
+    rate_min : int
+    rate_max : int
+    max_attempt : int
+    failed_attempt_duration : float
+    word_randomizer: bool
+    categories: list
+    locations: list
+    enable: bool
+    csv_export: bool
+    json_export: bool
+    database_export: bool
