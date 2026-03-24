@@ -12,7 +12,7 @@ class BusinessListData(BaseModel):
     rating: Optional[float] = None
     review_count: Optional[int] = None
     telephone: Optional[str] = None
-    opening_hours: Optional[str] = None
+    opening_hours: Optional[str|list] = None
 
     @field_validator('*', mode='before')
     @classmethod

@@ -27,7 +27,7 @@ class YellowPagesScraper:
             soup = BeautifulSoup(response,'html.parser')
             target_html_element = soup.find_all('script', type="application/ld+json")
             if not target_html_element:
-                for i in range(start=1, stop=6, step=1):
+                for i in range(6):
                     target_html_element = soup.find_all('script', type="application/ld+json")
                     if not target_html_element:
                         print(f"attemps : {i}")
@@ -53,18 +53,18 @@ class YellowPagesScraper:
                     "opening_hours": item.get('openingHours' , "N/A"),
                 }
                 final_clean_data.append(clean_data)
-            return stringtojson
+            return final_clean_data
         except requests.HTTPError as e:
-            print(f"[Business_list] HTTP Error: {e}")
+            print(f"[get_business_list | yellowpages.py] HTTP Error: {e}")
             return {}
         except requests.ConnectionError:
-            print("[Business_list] Connection Failed")
+            print("[get_business_list | yellowpages.py] Connection Failed")
             return {}
         except requests.Timeout:
-            print("[Business_list] Timed Out")
+            print("[get_business_list | yellowpages.py] Timed Out")
             return {}
         except Exception as e:
-            print(f"[Business_list] Failed: {e}")
+            print(f"[get_business_list  yellowpages.py] Failed: {e}")
             return {}
         
 
@@ -96,7 +96,7 @@ class YellowPagesScraper:
             return "N/A"
 
 
-    def get_business_insight(self,target_url)->dict:
+    def get_business_insight(self,target_url: str)->dict:
         try:
             response = requests.get(target_url,headers=self.headers)
             soup = BeautifulSoup(response.text , 'html.parser')
@@ -167,15 +167,15 @@ class YellowPagesScraper:
 
             return returning_data
         except requests.HTTPError as e:
-            print(f"[get_business_insight] HTTP Error: {e}")
-            return {}
+            raise requests.HTTPError(f"[get_business_insight] HTTP Error: {e}")
+            
         except requests.ConnectionError:
-            print("[get_business_insight] Connection Failed")
-            return {}
+            raise requests.ConnectionError("[get_business_insight] Connection Failed")
+            
         except requests.Timeout:
-            print("[get_business_insight] Timed Out")
+            raise requests.Timeout("[get_business_insight] Timed Out")
             return {}
         except Exception as e:
-            print(f"[get_business_insight] Failed: {e}")
+            raise ValueError(f"[get_business_insight] Failed: {e}")
             return {}
 
