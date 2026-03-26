@@ -1,15 +1,17 @@
 {
-    "pages_per_run": 0,
-    "rate_min" : 0,
-    "rate_max" : 0,
-    "max_attempt": 0,
+    "page_per_request": 1,
+    "rate_min" : 1.0,
+    "rate_max" : 1.0 ,
+    "max_attempt": 1,
+    "attempt_duration" : 5,
     "word_randomizer": false,
-    "categories": [],
-    "locations": [],
+    "categories": ["jewelry"],
+    "locations": ["NYC, NY"],
     "export_system": {
         "enable": false,
         "csv": false,
         "json": false,
-        "database": false
+        "excel": false,
+        "pdf": false
     }
 }

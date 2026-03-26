@@ -21,22 +21,24 @@ class YellowPagesScraper:
         self.url_search_path = f"https://www.yellowpages.com/search?search_terms={category}&geo_location_terms={borough}%2C+{city}&s=average_rating"
 
 
-    def get_business_list(self)->dict: 
+    def get_business_list(self,max_attempt: int , attempt_duration: float)->dict: 
         try:
             response = (requests.get(self.url_search_path,headers=self.headers)).content
+            
             soup = BeautifulSoup(response,'html.parser')
             target_html_element = soup.find_all('script', type="application/ld+json")
             if not target_html_element:
-                for i in range(6):
+                for i in range(max_attempt):
                     target_html_element = soup.find_all('script', type="application/ld+json")
                     if not target_html_element:
                         print(f"attemps : {i}")
                         print(f"Response Status Code: {response.status_code}")
-                        time.sleep(10.0)
+                        time.sleep(attempt_duration)
                         continue
                     elif target_html_element:
                         break
             stringtojson = json.loads(str(target_html_element[1].string))
+
             final_clean_data = []
             for item in stringtojson:
                 clean_data = {
@@ -54,6 +56,7 @@ class YellowPagesScraper:
                 }
                 final_clean_data.append(clean_data)
             return final_clean_data
+        
         except requests.HTTPError as e:
             print(f"[get_business_list | yellowpages.py] HTTP Error: {e}")
             return {}
@@ -64,7 +67,8 @@ class YellowPagesScraper:
             print("[get_business_list | yellowpages.py] Timed Out")
             return {}
         except Exception as e:
-            print(f"[get_business_list  yellowpages.py] Failed: {e}")
+            print(f"[get_business_list | yellowpages.py] Failed: {e}")
+            raise e
             return {}
         
 
@@ -94,13 +98,13 @@ class YellowPagesScraper:
         except (ValueError, IndexError) as e:
             print(f"[decode_cloudflare_email] Failed: {e}")
             return "N/A"
-
+    
 
     def get_business_insight(self,target_url: str)->dict:
         try:
             response = requests.get(target_url,headers=self.headers)
             soup = BeautifulSoup(response.text , 'html.parser')
-
+    
             res_name = self.get_individual_object(soup, 'h1', 'dockable business-name')
             name = res_name.text if res_name != "N/A" else "N/A"
 
@@ -109,11 +113,14 @@ class YellowPagesScraper:
 
             res_desc = self.get_individual_object(soup, 'dd', 'general-info')
             description = res_desc.text if res_desc != "N/A" else "N/A"
-
+            
             res_addr = self.get_individual_object(soup, 'span', 'address')
-            street = res_addr.find('span').text if res_addr.find('span') else "N/A"
-            city_state = res_addr.find(string=True, recursive=False)
-            address = f"{street}, {city_state.strip()}" if city_state else street
+            if res_addr != "N/A":
+                street = res_addr.find('span')
+                city_state = res_addr.find(string=True, recursive=False)
+                address = f"{street.text}, {city_state.strip()}" if city_state else street
+            else:
+                address = "N/A"
 
             res_web = self.get_individual_object(soup, 'p', 'website')
             website = res_web.find('a')['href'] if (res_web != "N/A" and res_web.find('a')) else "N/A"
@@ -164,18 +171,18 @@ class YellowPagesScraper:
                 "extra_links": extra_links.text if extra_links != "N/A" else "N/A",
                 "extra_phone": final_extra_phone
             }
-
             return returning_data
+        
         except requests.HTTPError as e:
-            raise requests.HTTPError(f"[get_business_insight] HTTP Error: {e}")
-            
+            print(f"[get_business_list | yellowpages.py] HTTP Error: {e}")
+            return {}
         except requests.ConnectionError:
-            raise requests.ConnectionError("[get_business_insight] Connection Failed")
-            
+            print("[get_business_list | yellowpages.py] Connection Failed")
+            return {}
         except requests.Timeout:
-            raise requests.Timeout("[get_business_insight] Timed Out")
+            print("[get_business_list | yellowpages.py] Timed Out")
             return {}
         except Exception as e:
-            raise ValueError(f"[get_business_insight] Failed: {e}")
+            print(f"[get_business_list  yellowpages.py] Failed: {e}")
             return {}
 

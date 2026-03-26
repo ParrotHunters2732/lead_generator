@@ -21,7 +21,7 @@ class Reader:
             result = cur.fetchall()
             return result
 
-
+    
 class Writer(Reader):
     def write_crypto_price(self,symbol,name,price_usd,change_24h,market_cap):
         conn = None
@@ -71,6 +71,7 @@ class Writer(Reader):
                 conn.commit()
         finally:
                 conn.close()
+
     def write_business_insight(self,dict_business_insight: dict):
         try:
             conn = None
@@ -84,8 +85,7 @@ class Writer(Reader):
             print(data_dict)
 
             with conn.cursor() as cur:
-                pass
-                #cur.execute(query,confirmed_data)
+                cur.execute(query,confirmed_data)
 
         except psycopg2.ProgrammingError as e:
             if conn:
