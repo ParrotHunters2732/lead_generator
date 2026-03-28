@@ -6,8 +6,6 @@ import logging
 import json
 
 
-
-
 logging.basicConfig(
     encoding='utf-8',
     level=logging.INFO,
@@ -115,78 +113,87 @@ class YellowPagesScraper:
             return "N/A"
     
 
-    def get_business_insight(self,target_url: str)->dict:
+    def get_business_insight(self,session: requests.session ,target_url: str)->dict:
+        session.headers.update(self.headers)
         try:
-            response = requests.get(target_url,headers=self.headers)
-            soup = BeautifulSoup(response.text , 'html.parser')
-    
-            res_name = self.get_individual_object(soup, 'h1', 'dockable business-name')
-            name = res_name.text if res_name != "N/A" else "N/A"
+            for amount in range(confirmed_config_data["max_attempt"]+1):
+                response = session.get(url=target_url)
+                if response.status_code == 200:
+                    content = response.content
+                    soup = BeautifulSoup(content,'html.parser')
 
-            res_cat = self.get_individual_object(soup, 'div', 'categories')
-            category = "N/A" if res_cat == "N/A" else ", ".join([a.text for a in res_cat.find_all('a')])
+                    res_name = self.get_individual_object(soup, 'h1', 'dockable business-name')
+                    name = res_name.text if res_name != "N/A" else "N/A"
 
-            res_desc = self.get_individual_object(soup, 'dd', 'general-info')
-            description = res_desc.text if res_desc != "N/A" else "N/A"
-            
-            res_addr = self.get_individual_object(soup, 'span', 'address')
-            if res_addr != "N/A":
-                street = res_addr.find('span')
-                city_state = res_addr.find(string=True, recursive=False)
-                address = f"{street.text}, {city_state.strip()}" if city_state else street
-            else:
-                address = "N/A"
+                    res_cat = self.get_individual_object(soup, 'div', 'categories')
+                    category = "N/A" if res_cat == "N/A" else ", ".join([a.text for a in res_cat.find_all('a')])
 
-            res_web = self.get_individual_object(soup, 'p', 'website')
-            website = res_web.find('a')['href'] if (res_web != "N/A" and res_web.find('a')) else "N/A"
+                    res_desc = self.get_individual_object(soup, 'dd', 'general-info')
+                    description = res_desc.text if res_desc != "N/A" else "N/A"
+                    
+                    res_addr = self.get_individual_object(soup, 'span', 'address')
+                    if res_addr != "N/A":
+                        street = res_addr.find('span')
+                        city_state = res_addr.find(string=True, recursive=False)
+                        address = f"{street.text}, {city_state.strip()}" if city_state else street
+                    else:
+                        address = "N/A"
 
-            phone = self.get_individual_object(soup, 'p', 'phone')
-            if phone != "N/A":
-                phone = phone.text.replace('Phone:', '').strip()
-            else:
-                phone = "N/A" 
+                    res_web = self.get_individual_object(soup, 'p', 'website')
+                    website = res_web.find('a')['href'] if (res_web != "N/A" and res_web.find('a')) else "N/A"
 
-            res_email = self.get_individual_object(soup, 'a', 'email-business')
-            href = 'N/A' if res_email == 'N/A' else res_email.get('href', 'N/A')
+                    phone = self.get_individual_object(soup, 'p', 'phone')
+                    if phone != "N/A":
+                        phone = phone.text.replace('Phone:', '').strip()
+                    else:
+                        phone = "N/A" 
 
-            if href != 'N/A' and 'email-protection#' in href:
-                cf_hex = href.split('#')[-1]
-                key = int(cf_hex[:2], 16)
-                email = "".join([chr(int(cf_hex[i:i+2], 16) ^ key) for i in range(2, len(cf_hex), 2)])
-                href = email
-            clean_email = href.replace('mailto:', '').split('?')[0].strip()
-            
-            payment = self.get_individual_object(soup, 'dd', 'payment')
+                    res_email = self.get_individual_object(soup, 'a', 'email-business')
+                    href = 'N/A' if res_email == 'N/A' else res_email.get('href', 'N/A')
 
-            language = self.get_individual_object(soup, 'dd', 'languages')
+                    if href != 'N/A' and 'email-protection#' in href:
+                        cf_hex = href.split('#')[-1]
+                        key = int(cf_hex[:2], 16)
+                        email = "".join([chr(int(cf_hex[i:i+2], 16) ^ key) for i in range(2, len(cf_hex), 2)])
+                        href = email
+                    clean_email = href.replace('mailto:', '').split('?')[0].strip()
+                    
+                    payment = self.get_individual_object(soup, 'dd', 'payment')
 
-            extra_links = self.get_individual_object(soup, 'dd', 'weblinks')
+                    language = self.get_individual_object(soup, 'dd', 'languages')
 
-            extra_phone = self.get_individual_object(soup, 'dd', 'extra-phones') #return final extra phone list
-            if extra_phone != "N/A":
-                final_extra_phone = []
-                for i in extra_phone:
-                    spans = i.find_all('span')  
-                    if len(spans) > 1:          
-                            extra_individual_phone = spans[1]
-                            final_extra_phone.append(extra_individual_phone.text)
-            else:
-                final_extra_phone = "N/A" 
+                    extra_links = self.get_individual_object(soup, 'dd', 'weblinks')
 
-            returning_data = {
-                "name": name,
-                "category": category,
-                "description": description,
-                "address": address,
-                "website": website,
-                "phone": phone,
-                "email": clean_email,
-                "payment": payment.text if payment != "N/A" else "N/A",
-                "language": language.text if language != "N/A" else "N/A",
-                "extra_links": extra_links.text if extra_links != "N/A" else "N/A",
-                "extra_phone": final_extra_phone
-            }
-            return returning_data
+                    extra_phone = self.get_individual_object(soup, 'dd', 'extra-phones') #return final extra phone list
+                    if extra_phone != "N/A":
+                        final_extra_phone = []
+                        for i in extra_phone:
+                            spans = i.find_all('span')  
+                            if len(spans) > 1:          
+                                    extra_individual_phone = spans[1]
+                                    final_extra_phone.append(extra_individual_phone.text)
+                    else:
+                        final_extra_phone = "N/A" 
+                    returning_data = {
+                        "name": name,
+                        "category": category,
+                        "description": description,
+                        "address": address,
+                        "website": website,
+                        "phone": phone,
+                        "email": clean_email,
+                        "payment": payment.text if payment != "N/A" else "N/A",
+                        "language": language.text if language != "N/A" else "N/A",
+                        "extra_links": extra_links.text if extra_links != "N/A" else "N/A",
+                        "extra_phone": final_extra_phone
+                    }
+                    return returning_data
+                else:
+                    logger.warning(f"get_business_insight | 'yellowpages.py' | attemps : {amount+1}")
+                    logger.warning(f"get_business_insight | 'yellowpages.py' | Response Status Code: {response.status_code}")
+                    sleep(confirmed_config_data["attempt_duration"])
+                    continue
+            return {}
         
         except requests.HTTPError as e:
             logger.error(f"get_business_list | 'yellowpages.py' | HTTP Error: {e}")

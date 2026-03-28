@@ -32,8 +32,8 @@ class BusinessInsightData(BaseModel):
     email: Optional[str] = None
     payment: Optional[str] = None
     language: Optional[str] = None
-    extra_links: Optional[str] = None
-    extra_phone: Optional[str] = None
+    extra_links: Optional[str] | list= None
+    extra_phone: Optional[str] | list = None
     
     @field_validator('*', mode='before')
     @classmethod
@@ -65,6 +65,7 @@ class ConfigJson(BaseModel):
     location: list[str] = Field(min_length=1, description="location to iterate example NYC / Sydney etc.")
     export_system: ExportJson
     headers: dict = Field(min_length=1 , description="headers that would be use in the request **SHOULD INCLUDE COOKIES")
+    amount_write_business_insight: int = Field(gt=0,description="amount of page to run on inner extraction",default=10) 
     
 
 
