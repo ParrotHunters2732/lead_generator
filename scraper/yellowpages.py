@@ -1,9 +1,12 @@
 from bs4 import BeautifulSoup
-import requests
-import json
-import time
-import logging
 from models import ConfigJson
+from time import sleep
+import requests
+import logging
+import json
+
+
+
 
 logging.basicConfig(
     encoding='utf-8',
@@ -27,32 +30,28 @@ class YellowPagesScraper:
     def __init__(self):
         self.headers = confirmed_config_data["headers"]
 
-    def get_business_list(self,max_attempt: int , attempt_duration: float, category: str , location: tuple , page: int, session: str)->dict: 
+    def get_business_list(self , category: str , location: tuple , page: int, session: requests.session)->dict: 
         base_url = 'https://www.yellowpages.com/search?'
         params = {
             "search_terms": category,
             "geo_location_terms": location,
             "page": page,
             "s": "average_rating"
-        }
+        }   
+        session.headers.update(self.headers)
         try:    
-                session.headers.update(self.headers)
-                response = session.get(url=base_url,params=params)
-                content = response.content
-                soup = BeautifulSoup(content,'html.parser')
-                target_html_element = soup.find_all('script', type="application/ld+json")
-                if not target_html_element:
-                    for i in range(max_attempt):
-                        retry_response = session.get(url=base_url,params=params)
-                        retry_content = retry_response.content
-                        retry_soup = BeautifulSoup(retry_content,'html.parser')
-                        target_html_element = retry_soup.find_all('script', type="application/ld+json")
-                        if not target_html_element:
-                            logger.warning(f"get_business_list | 'yellowpages.py' | attemps : {i+1}")
-                            logger.warning(f"get_business_list | 'yellowpages.py' | Response Status Code: {response.status_code}")
-                            continue
-                        elif target_html_element:
-                            break
+                for amount in range(confirmed_config_data["max_attempt"]+1):
+                    response = session.get(url=base_url,params=params)
+                    if response.status_code == 200:
+                        content = response.content
+                        soup = BeautifulSoup(content,'html.parser')
+                        target_html_element = soup.find_all('script', type="application/ld+json")
+                        break
+                    else:
+                        logger.warning(f"get_business_list | 'yellowpages.py' | attemps : {amount+1}")
+                        logger.warning(f"get_business_list | 'yellowpages.py' | Response Status Code: {response.status_code}")
+                        sleep(confirmed_config_data["attempt_duration"])
+                        continue
 
                 if target_html_element:
                     for script in target_html_element:
@@ -67,13 +66,14 @@ class YellowPagesScraper:
                                     "country": item.get('address' , {}).get('addressCountry' , "N/A"),
                                     "street": item.get('address' , {}).get('streetAddress' , "N/A"),
                                     "rating": item.get('aggregateRating' , {}).get('ratingValue' , "N/A"),
-                                    "review_count": item.get('aggregateRating' , {}).get('reviewCount' , "N/A"),
+                                    "review_coun    t": item.get('aggregateRating' , {}).get('reviewCount' , "N/A"),
                                     "telephone": item.get('telephone' , "N/A"),
                                     "opening_hours": item.get('openingHours' , "N/A"),
                                     "location_name": item.get('address' , {}).get('addressLocality' , "N/A"),
                                     "state_code": item.get('address' , {}).get('addressRegion' , "N/A")
                                 }
                                 final_clean_data.append(clean_data)
+
                             return final_clean_data
                         
                 return {}
@@ -89,7 +89,7 @@ class YellowPagesScraper:
             return {}
         except Exception as e:
             logger.error(f"get_business_list | 'yellowpages.py' | Failed: {e}")
-            raise e
+            return {}
 
     def get_individual_object(self,soup_object,tag,attrs)->str:
         try:
