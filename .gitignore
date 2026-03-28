@@ -3,3 +3,4 @@ __pycache__
 requirements.txt
 test.py
 config.json
+app.log
