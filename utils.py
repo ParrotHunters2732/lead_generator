@@ -1,10 +1,11 @@
 from scraper.yellowpages import YellowPagesScraper
 from database.supabase import Writer
 from models import ConfigJson
-from time import sleep
 from random import uniform
-import logging
+from time import sleep
 import requests
+import logging
+
 
 logging.basicConfig(
     encoding='utf-8',
@@ -32,19 +33,14 @@ def store_business_list():
     with requests.Session() as session:
         for i , v  in enumerate(range(0,confirmed_config_data["page_per_request"]),start=1):
             logger.info(f"store_business_list | 'utils.py' | page: {i}")
-            data = yellow_object.get_business_list(
-                max_attempt=confirmed_config_data["max_attempt"], 
-                attempt_duration=confirmed_config_data["attempt_duration"], 
+            data = yellow_object.get_business_list( #get_business_list_returning dict
                 category=confirmed_config_data["category"],
                 location=confirmed_config_data["location"],
                 page=i,
                 session=session
-                )
-            
+                )    
             pick_float = uniform(confirmed_config_data["rate_min"],confirmed_config_data["rate_max"])
             logger.info(f"store_business_list | 'utils.py' | {pick_float:.1f}s")
-            
-
             if data:
                 Writer().write_business_list(business_list_data=data)
                 sleep(pick_float)
@@ -56,6 +52,12 @@ def store_business_list():
                 continue
         logger.info("execution of 'store_business_list' completed")
         logger.info(f"store_business_list | 'utils.py' | failed page/s: {error_list}")
+
+def store_business_insight():
+    logging.info("executing 'store_business_insight'")
+
+                
+            
 
     
     
