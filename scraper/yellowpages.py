@@ -2,79 +2,94 @@ from bs4 import BeautifulSoup
 import requests
 import json
 import time
+import logging
+from models import ConfigJson
 
+logging.basicConfig(
+    encoding='utf-8',
+    level=logging.INFO,
+    format='%(asctime)s | %(levelname)s | %(message)s',
+    handlers=[
+        logging.FileHandler('app.log'),
+        logging.StreamHandler() 
+    ]
+    )
+logger = logging.getLogger(__name__)
+
+with open('config.json', 'r') as f:
+    try:
+        confirmed_config_data = ConfigJson.model_validate_json(f.read()).model_dump()
+    except Exception as e:
+        logger.critical(f"The config is incompatible, change data in 'config.json': {e}")
+        raise SystemExit(1)
 
 class YellowPagesScraper:
+    def __init__(self):
+        self.headers = confirmed_config_data["headers"]
 
-    def __init__(self,category: str , borough: str , city: str):
-        self.headers = {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Encoding" : "gzip, deflate, br, zstd",
-            "User-Agent" : "Mozilla/5.0 (X11; Linux x86_64; rv:148.0) Gecko/20100101 Firefox/148.0",
-            "Accept-Language" : "en-US,en;q=0.9",
-            "Referer" : f"https://www.yellowpages.com/",
-            "Upgrade-Insecure-Requests": "1",
-            "Sec-Fetch-Dest": "document",
-            "Sec-Fetch-Mode": "navigate",
-            "Sec-Fetch-Site": "same-origin"
+    def get_business_list(self,max_attempt: int , attempt_duration: float, category: str , location: tuple , page: int, session: str)->dict: 
+        base_url = 'https://www.yellowpages.com/search?'
+        params = {
+            "search_terms": category,
+            "geo_location_terms": location,
+            "page": page,
+            "s": "average_rating"
         }
-        self.url_search_path = f"https://www.yellowpages.com/search?search_terms={category}&geo_location_terms={borough}%2C+{city}&s=average_rating"
+        try:    
+                session.headers.update(self.headers)
+                response = session.get(url=base_url,params=params)
+                content = response.content
+                soup = BeautifulSoup(content,'html.parser')
+                target_html_element = soup.find_all('script', type="application/ld+json")
+                if not target_html_element:
+                    for i in range(max_attempt):
+                        retry_response = session.get(url=base_url,params=params)
+                        retry_content = retry_response.content
+                        retry_soup = BeautifulSoup(retry_content,'html.parser')
+                        target_html_element = retry_soup.find_all('script', type="application/ld+json")
+                        if not target_html_element:
+                            logger.warning(f"get_business_list | 'yellowpages.py' | attemps : {i+1}")
+                            logger.warning(f"get_business_list | 'yellowpages.py' | Response Status Code: {response.status_code}")
+                            continue
+                        elif target_html_element:
+                            break
 
-
-    def get_business_list(self,max_attempt: int , attempt_duration: float)->dict: 
-        try:
-            response = (requests.get(self.url_search_path,headers=self.headers)).content
-            
-            soup = BeautifulSoup(response,'html.parser')
-            target_html_element = soup.find_all('script', type="application/ld+json")
-            if not target_html_element:
-                for i in range(max_attempt):
-                    target_html_element = soup.find_all('script', type="application/ld+json")
-                    if not target_html_element:
-                        print(f"attemps : {i}")
-                        print(f"Response Status Code: {response.status_code}")
-                        time.sleep(attempt_duration)
-                        continue
-                    elif target_html_element:
-                        break
-            stringtojson = json.loads(str(target_html_element[1].string))
-
-            final_clean_data = []
-            for item in stringtojson:
-                clean_data = {
-                    "name": item.get('name' , "N/A"),
-                    "url": item.get('url' , "N/A"),
-                    "postal_code": item.get('address' , {}).get('postalCode' , "N/A"),
-                    "country": item.get('address' , {}).get('addressCountry' , "N/A"),
-                    "street": item.get('address' , {}).get('streetAddress' , "N/A"),
-                    "locality": item.get('address' , {}).get('addressLocality' , "N/A"),
-                    "region": item.get('address' , {}).get('addressRegion' , "N/A"),
-                    "rating": item.get('aggregateRating' , {}).get('ratingValue' , "N/A"),
-                    "review_count": item.get('aggregateRating' , {}).get('reviewCount' , "N/A"),
-                    "telephone": item.get('telephone' , "N/A"),
-                    "opening_hours": item.get('openingHours' , "N/A"),
-                }
-                final_clean_data.append(clean_data)
-            return final_clean_data
+                if target_html_element:
+                    for script in target_html_element:
+                        if '"@type":"LocalBusiness"' in str(script):
+                            stringtojson = json.loads(str(script.string))
+                            final_clean_data = []
+                            for item in stringtojson:
+                                clean_data = {
+                                    "name": item.get('name' , "N/A"),
+                                    "url": item.get('url' , "N/A"),
+                                    "postal_code": item.get('address' , {}).get('postalCode' , "N/A"),
+                                    "country": item.get('address' , {}).get('addressCountry' , "N/A"),
+                                    "street": item.get('address' , {}).get('streetAddress' , "N/A"),
+                                    "rating": item.get('aggregateRating' , {}).get('ratingValue' , "N/A"),
+                                    "review_count": item.get('aggregateRating' , {}).get('reviewCount' , "N/A"),
+                                    "telephone": item.get('telephone' , "N/A"),
+                                    "opening_hours": item.get('openingHours' , "N/A"),
+                                    "location_name": item.get('address' , {}).get('addressLocality' , "N/A"),
+                                    "state_code": item.get('address' , {}).get('addressRegion' , "N/A")
+                                }
+                                final_clean_data.append(clean_data)
+                            return final_clean_data
+                        
+                return {}
         
         except requests.HTTPError as e:
-            print(f"[get_business_list | yellowpages.py] HTTP Error: {e}")
+            logger.error(f"get_business_list | 'yellowpages.py' | HTTP Error: {e}")
             return {}
         except requests.ConnectionError:
-            print("[get_business_list | yellowpages.py] Connection Failed")
+            logger.error("get_business_list | 'yellowpages.py' | Connection Failed")
             return {}
         except requests.Timeout:
-            print("[get_business_list | yellowpages.py] Timed Out")
+            logger.error("get_business_list | 'yellowpages.py' | Timed Out")
             return {}
         except Exception as e:
-            print(f"[get_business_list | yellowpages.py] Failed: {e}")
+            logger.error(f"get_business_list | 'yellowpages.py' | Failed: {e}")
             raise e
-            return {}
-        
-
-    def get_url(self)->str:
-        return self.url_search_path
-
 
     def get_individual_object(self,soup_object,tag,attrs)->str:
         try:
@@ -83,7 +98,7 @@ class YellowPagesScraper:
                 return returning_data
             return "N/A"
         except Exception as e:
-            print(f"[get_business_insight] Failed: {e}")
+            logger.error(f"get_individual_object | 'yellowpages.py '| Failed: {e}")
             return "N/A"
         
 
@@ -96,7 +111,7 @@ class YellowPagesScraper:
                 email += chr(char_code)
             return email
         except (ValueError, IndexError) as e:
-            print(f"[decode_cloudflare_email] Failed: {e}")
+            logger.error(f"decode_cloudflare_email | 'yellowpages.py' | Failed: {e}")
             return "N/A"
     
 
@@ -174,15 +189,15 @@ class YellowPagesScraper:
             return returning_data
         
         except requests.HTTPError as e:
-            print(f"[get_business_list | yellowpages.py] HTTP Error: {e}")
+            logger.error(f"get_business_list | 'yellowpages.py' | HTTP Error: {e}")
             return {}
         except requests.ConnectionError:
-            print("[get_business_list | yellowpages.py] Connection Failed")
+            logger.error("get_business_list | 'yellowpages.py' | Connection Failed")
             return {}
         except requests.Timeout:
-            print("[get_business_list | yellowpages.py] Timed Out")
+            logger.error("get_business_list | 'yellowpages.py' | Timed Out")
             return {}
         except Exception as e:
-            print(f"[get_business_list  yellowpages.py] Failed: {e}")
+            logger.error(f"get_business_list | 'yellowpages.py' | Failed: {e}")
             return {}
 

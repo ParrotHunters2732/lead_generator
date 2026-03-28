@@ -7,12 +7,12 @@ class BusinessListData(BaseModel):
     postal_code: Optional[str] = None
     country: Optional[str] = None
     street: Optional[str] = None
-    locality: Optional[str] = None
-    region: Optional[str] = None
     rating: Optional[float] = None
     review_count: Optional[int] = None
     telephone: Optional[str] = None
     opening_hours: Optional[str|list] = None
+    location_name: Optional[str] = None
+    state_code: Optional[str] = None
 
     @field_validator('*', mode='before')
     @classmethod
@@ -53,15 +53,19 @@ class ExportJson(BaseModel):
     
     
 class ConfigJson(BaseModel):
-    page_per_request: int = Field(gt=0 , description="amount of pages to run" , default=1)
+    page_per_request: int = Field(gt=0 , le=100,  description="amount of pages to run" , default=1)
     rate_min : float = Field(ge=0 , description="minimum rate per requests" , default=1) # rate per requests gonna get randomize between rate_min and rate_max 
     rate_max : float = Field(gt=0 , description="maximum rate per requests" , default=1) 
     max_attempt : int = Field(ge=0 , description="amount of attempts for request" , default=0)
     attempt_duration : float =  Field(ge=0 , description="how long to wait per requests" , default=0)
     word_randomizer: bool = Field(description="amount of pages to run" , default=False)
-    categories: list[str] = Field(min_length=1, description = "category of business to iterate example  plumbing / dentist , etc.")
-    locations: list[str] = Field(min_length=1, description="location to iterate example NYC / Sydney etc.")
+    redo_on_fail_page: bool = Field(description="redo on the return fail page" , default=False)
+    redo_on_fail_page_attempt: int = Field(ge=0 , description="redo on the return fail page's attempt" , default=0)
+    category: list[str] = Field(min_length=1, description = "category of business to iterate example  plumbing / dentist , etc.")
+    location: list[str] = Field(min_length=1, description="location to iterate example NYC / Sydney etc.")
     export_system: ExportJson
+    headers: dict = Field(min_length=1 , description="headers that would be use in the request **SHOULD INCLUDE COOKIES")
+    
 
 
         

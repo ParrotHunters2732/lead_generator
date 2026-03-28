@@ -3,8 +3,21 @@ from psycopg2 import extras , pool
 from models import BusinessListData , BusinessInsightData
 import os 
 from dotenv import load_dotenv
+import logging
+
 
 load_dotenv()
+logging.basicConfig(
+    encoding='utf-8',
+    level=logging.INFO,
+    format='%(asctime)s | %(levelname)s | %(message)s',
+    handlers=[
+        logging.FileHandler('app.log'),
+        logging.StreamHandler() 
+    ]
+    )
+logger = logging.getLogger(__name__)
+
 
 class Reader:
     def __init__(self):
@@ -37,10 +50,10 @@ class Writer(Reader):
             conn = None
             conn = self.db_pool.getconn()
             query = """
-                INSERT INTO business_list (name,url,postal_code,country,street,locality,region,rating,review_count,telephone,opening_hours) 
+                INSERT INTO business_list (name,url,postal_code,country,street,rating,review_count,telephone,opening_hours,location_name,state_code) 
                 VALUES %s
                 """
-            template="(%(name)s,%(url)s,%(postal_code)s,%(country)s,%(street)s,%(locality)s,%(region)s,%(rating)s,%(review_count)s,%(telephone)s,%(opening_hours)s)"
+            template="(%(name)s,%(url)s,%(postal_code)s,%(country)s,%(street)s,%(rating)s,%(review_count)s,%(telephone)s,%(opening_hours)s,%(location_name)s,%(state_code)s)"
             confirmed_data = [BusinessListData(**i) for i in business_list_data]
             data_dict = [i.model_dump() for i in confirmed_data]
             with conn.cursor() as cur:
@@ -48,27 +61,28 @@ class Writer(Reader):
 
         except psycopg2.ProgrammingError as e:
             if conn:
-                print(f"[ Write_Business_data | Data Error | ] : {e}")
                 conn.rollback()
-                raise e
+                logger.critical(f"write_Business_list | 'supabase.py' | : {e}")
+                raise SystemExit(1)
         except psycopg2.OperationalError as e:
             if conn:
-                print(f"[ Write_Business_data | Database's Operation Error | ] : {e}")
                 conn.rollback()
-                return 
+                logger.critical(f"write_Business_list | 'supabase.py' | : {e}")
+                raise SystemExit(1)
         except psycopg2.IntegrityError as e:
             if conn:
-                print(f"[ Write_Business_data | Database Intregrity Affected | ] : {e}")
                 conn.rollback()
-                return
+                logger.critical(f"write_Business_list | 'supabase.py' | : {e}")
+                raise SystemExit(1)
         except psycopg2.Error as e:
             if conn:
-                print(f"[ Write_Business_data ] : {e}")
                 conn.rollback()
-                return
+                logger.critical(f"write_Business_list | 'supabase.py' : {e}")
+                raise SystemExit(1)
         else:
             if conn:
                 conn.commit()
+                logger.info("write_business_list | 'supabase' | Successfully wrote business list")
         finally:
                 conn.close()
 
@@ -89,26 +103,27 @@ class Writer(Reader):
 
         except psycopg2.ProgrammingError as e:
             if conn:
-                print(f"[ Write_Business_data | Data Error | ] : {e}")
                 conn.rollback()
-                raise e
+                logger.critical(f"write_Business_insight | 'supabase'| : {e}")
+                raise SystemExit(1)
         except psycopg2.OperationalError as e:
             if conn:
-                print(f"[ Write_Business_data | Database's Operation Error | ] : {e}")
                 conn.rollback()
-                return 
+                logger.critical(f"write_Business_insight | 'supabase.py' | : {e}")
+                raise SystemExit(1)
         except psycopg2.IntegrityError as e:
             if conn:
-                print(f"[ Write_Business_data | Database Intregrity Affected | ] : {e}")
                 conn.rollback()
-                return
+                logger.critical(f"write_Business_insight | 'supabase.py' | : {e}")
+                raise SystemExit(1)
         except psycopg2.Error as e:
             if conn:
-                print(f"[ Write_Business_data ] : {e}")
                 conn.rollback()
-                return
+                logger.critical(f"write_Business_insight | 'supabase.py' | : {e}")
+                raise SystemExit(1)
         else:
             if conn:
                 conn.commit()
+                logger.info(" write_business_insight | supabase | Successfully wrote business list")
         finally:
                 conn.close()
