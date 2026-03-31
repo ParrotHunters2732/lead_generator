@@ -28,6 +28,6 @@
                     "Sec-Fetch-Mode": "navigate",
                     "Sec-Fetch-Site": "same-origin",
                     "Sec-Fetch-User": "?1",
-                    "cookies_string": "s_fid=3D6561031CC507E0-042D227380D31F0C;s_tp=10151;bucketsrc=search;s_nr=1774186941828;s_ppv=new-york-ny%253Arestaurants%2C9%2C9%2C940;bucket=search_monitor;s_otb=false;zone=420;s_prop70=March;__cf_bm=Rtgt67.edGfKkVk.OhhyQYVbDLK3Kxt1hiVssxOVJLg-1774690115.8457603-1.0.1.1-aBSqIxGxdo0Exrm6gGq0z1Ols6ykyiUawpYz68IaQ.XtKrX58osqLca.MQTm2JFZLIOTmcH2auOehf8062uGY4cUMY8Fcx_uKeqN3b9o6tSarvndcBSC9_nkjM8HWdGO;cc_geo=TH;gpc_=true;dns_lus=false;express:sess=eyJka3MiOiIxNmI3MTY2NC0zMWMxLTRkOTMtYmNhNi03NGU2ODM1MjY0NTciLCJmbGFzaCI6e30sInByZXZpb3VzUGFnZSI6InNycCJ9;express:sess.sig=4axp-UrD-AlGK-Mhqgs26pPv9Ac;location=geo_term%3ANew%20York%2C%20NY%7Clat%3A40.7142691%7Clng%3A-74.0059729%7Ccity%3ANew%20York%7Cstate%3ANY%7Cdisplay_geo%3ANew%20York%2C%20NY;optOut=true;s_cc=true;s_prop49=search_results;s_prop71=13;s_sq=%5B%5BB%5D%5D;search_terms=jewelry;sorted=false;vrid=b3614c60-dc7f-41cc-a9b8-0e671c424f32"
+                    "cookies_string": ""
                 }
 }
