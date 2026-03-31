@@ -28,7 +28,7 @@ class YellowPagesScraper:
     def __init__(self):
         self.headers = confirmed_config_data["headers"]
 
-    def get_business_list(self , category: str , location: tuple , page: int, session: requests.session)->dict: 
+    def get_business_list(self , category: str , location: tuple , page: int, session: requests.session,attempt: int)->dict: 
         base_url = 'https://www.yellowpages.com/search?'
         params = {
             "search_terms": category,
@@ -37,19 +37,28 @@ class YellowPagesScraper:
             "s": "average_rating"
         }   
         session.headers.update(self.headers)
+        target_html_element = None
         try:    
-                for amount in range(confirmed_config_data["max_attempt"]+1):
+                
+                for amount in range(attempt+1):
                     response = session.get(url=base_url,params=params)
                     if response.status_code == 200:
                         content = response.content
                         soup = BeautifulSoup(content,'html.parser')
                         target_html_element = soup.find_all('script', type="application/ld+json")
                         break
-                    else:
+                    elif response.status_code == 404:
+                        logger.warning(f"get_business_list | 'yellowpages.py' | attemps : {amount+1}")
+                        logger.warning(f"get_business_list | 'yellowpages.py' | Response Status Code: {response.status_code}")
+                        logger.warning(f"get_business_list | 'yellowpages.py' | Response there is info about this page!")
+                        return 404
+                    elif attempt > 1:
                         logger.warning(f"get_business_list | 'yellowpages.py' | attemps : {amount+1}")
                         logger.warning(f"get_business_list | 'yellowpages.py' | Response Status Code: {response.status_code}")
                         sleep(confirmed_config_data["attempt_duration"])
                         continue
+                    else:
+                        break
 
                 if target_html_element:
                     for script in target_html_element:
@@ -64,14 +73,13 @@ class YellowPagesScraper:
                                     "country": item.get('address' , {}).get('addressCountry' , "N/A"),
                                     "street": item.get('address' , {}).get('streetAddress' , "N/A"),
                                     "rating": item.get('aggregateRating' , {}).get('ratingValue' , "N/A"),
-                                    "review_coun    t": item.get('aggregateRating' , {}).get('reviewCount' , "N/A"),
+                                    "review_count": item.get('aggregateRating' , {}).get('reviewCount' , "N/A"),
                                     "telephone": item.get('telephone' , "N/A"),
                                     "opening_hours": item.get('openingHours' , "N/A"),
                                     "location_name": item.get('address' , {}).get('addressLocality' , "N/A"),
                                     "state_code": item.get('address' , {}).get('addressRegion' , "N/A")
                                 }
                                 final_clean_data.append(clean_data)
-
                             return final_clean_data
                         
                 return {}
@@ -113,10 +121,10 @@ class YellowPagesScraper:
             return "N/A"
     
 
-    def get_business_insight(self,session: requests.session ,target_url: str)->dict:
+    def get_business_insight(self,session: requests.session ,target_url: str, attempt: int)->dict:
         session.headers.update(self.headers)
         try:
-            for amount in range(confirmed_config_data["max_attempt"]+1):
+            for amount in range(attempt+1):
                 response = session.get(url=target_url)
                 if response.status_code == 200:
                     content = response.content
@@ -188,11 +196,13 @@ class YellowPagesScraper:
                         "extra_phone": final_extra_phone
                     }
                     return returning_data
-                else:
+                elif not response.status_code == 200 and confirmed_config_data["max_attempt"] > 0:
                     logger.warning(f"get_business_insight | 'yellowpages.py' | attemps : {amount+1}")
                     logger.warning(f"get_business_insight | 'yellowpages.py' | Response Status Code: {response.status_code}")
                     sleep(confirmed_config_data["attempt_duration"])
                     continue
+                else:
+                    return {}
             return {}
         
         except requests.HTTPError as e:
