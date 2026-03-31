@@ -7,14 +7,13 @@
     "word_randomizer": false,
     "redo_on_fail_page": false,
     "redo_on_fail_page_attempt": 3,
+    "write_business_insight_on_loop": true,
+    "write_business_insight_loop_cooldown": 50,
     "category": ["jewelry"],
     "location": ["NYC, NY"],
     "export_system": {
         "enable": false,
-        "csv": false,
-        "json": false,
-        "excel": false,
-        "pdf": false
+        "csv": false
     },
     "headers" :  { "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0",
                     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -29,5 +28,6 @@
                     "Sec-Fetch-Site": "same-origin",
                     "Sec-Fetch-User": "?1",
                     "cookies_string": ""
-                }
+                },
+    "amount_write_business_insight": 5 
 }
