@@ -1,21 +1,12 @@
 from functools import wraps
 from time import perf_counter
-import logging
+from logs.log import CustomLogger
 from requests import HTTPError , Timeout , ConnectionError
 from psycopg2 import ProgrammingError , OperationalError , IntegrityError , Error
 import os
 import inspect
 
-logging.basicConfig(
-    encoding='utf-8',
-    level=logging.INFO,
-    format='%(asctime)s | %(levelname)s | %(message)s',
-    handlers=[
-        logging.FileHandler('app.log'),
-        logging.StreamHandler()
-    ]
-    )
-logger = logging.getLogger(__name__)
+logger = CustomLogger().get_logger(__name__)
 
 def timer_count(fn):
     @wraps(fn)
@@ -37,7 +28,7 @@ def timer_count(fn):
         return result
     return wrapper
 
-def exception_handler(fn):
+def basic_exception_handling(fn):
     @wraps(fn)
     def wrapper(*args,**kwargs):
         result = None
@@ -47,9 +38,11 @@ def exception_handler(fn):
         except ( HTTPError , ConnectionError , Timeout ) as e:
             logger.error(f"{os.path.basename(file_path)} | {fn.__name__} | Network_failed | :  {e}")
         except ( ProgrammingError , OperationalError , IntegrityError , Error ) as e:
-            logger.critical(f"{os.path.basename(file_path)} | {fn.__name__} | Database_failed | :{e}")
+            logger.critical(f"{os.path.basename(file_path)} | {fn.__name__} | Database_failed | : {e}")
+            raise SystemExit(1)
         except Exception as e:
             logger.critical(f"{os.path.basename(file_path)} | {fn.__name__} | Unexpected | : {e}")
-            raise e
+            raise e 
         return result
     return wrapper
+

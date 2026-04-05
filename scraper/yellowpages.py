@@ -1,32 +1,18 @@
 from bs4 import BeautifulSoup
-from models import ConfigJson
 from time import sleep
 import requests
-import logging
 import json
+from logs.log import CustomLogger
+from helpers import get_json_config_dict
 
-
-logging.basicConfig(
-    encoding='utf-8',
-    level=logging.INFO,
-    format='%(asctime)s | %(levelname)s | %(message)s',
-    handlers=[
-        logging.FileHandler('app.log'),
-        logging.StreamHandler() 
-    ]
-    )
-logger = logging.getLogger(__name__)
-
-with open('config.json', 'r') as f:
-    try:
-        confirmed_config_data = ConfigJson.model_validate_json(f.read()).model_dump()
-    except Exception as e:
-        logger.critical(f"The config is incompatible, change data in 'config.json': {e}")
-        raise SystemExit(1)
+logger = CustomLogger().get_logger(__name__)
 
 class YellowPagesScraper:
     def __init__(self):
-        self.headers = confirmed_config_data["headers"]
+        confirmed_config_data = get_json_config_dict()
+        self.headers = confirmed_config_data["header"]
+        self.attempt_duration = confirmed_config_data["attempt_duration"]
+        self.max_attempt = confirmed_config_data["max_attempt"]
 
     def get_business_list(self , category: str , location: tuple , page: int, session: requests.session,attempt: int)->dict: 
         base_url = 'https://www.yellowpages.com/search?'
@@ -38,51 +24,49 @@ class YellowPagesScraper:
         }   
         session.headers.update(self.headers)
         target_html_element = None
-        try:    
-                
-                for amount in range(attempt+1):
-                    response = session.get(url=base_url,params=params)
-                    if response.status_code == 200:
-                        content = response.content
-                        soup = BeautifulSoup(content,'html.parser')
-                        target_html_element = soup.find_all('script', type="application/ld+json")
-                        break
-                    elif response.status_code == 404:
-                        logger.warning(f"get_business_list | 'yellowpages.py' | attemps : {amount+1}")
-                        logger.warning(f"get_business_list | 'yellowpages.py' | Response Status Code: {response.status_code}")
-                        logger.warning(f"get_business_list | 'yellowpages.py' | Response there is info about this page!")
-                        return 404
-                    elif attempt > 1:
-                        logger.warning(f"get_business_list | 'yellowpages.py' | attemps : {amount+1}")
-                        logger.warning(f"get_business_list | 'yellowpages.py' | Response Status Code: {response.status_code}")
-                        sleep(confirmed_config_data["attempt_duration"])
-                        continue
-                    else:
-                        break
+        try:       
+            for amount in range(attempt+1):
+                response = session.get(url=base_url,params=params)
+                if response.status_code == 200:
+                    content = response.content
+                    soup = BeautifulSoup(content,'html.parser')
+                    target_html_element = soup.find_all('script', type="application/ld+json")
+                    break
+                elif response.status_code == 404:
+                    logger.warning(f"get_business_list | 'yellowpages.py' | attemps : {amount+1}")
+                    logger.warning(f"get_business_list | 'yellowpages.py' | Response Status Code: {response.status_code}")
+                    logger.warning(f"get_business_list | 'yellowpages.py' | Response there is info about this page!")
+                    return 404
+                elif attempt > 1:
+                    logger.warning(f"get_business_list | 'yellowpages.py' | attemps : {amount+1}")
+                    logger.warning(f"get_business_list | 'yellowpages.py' | Response Status Code: {response.status_code}")
+                    sleep(self.attempt_duration)
+                    continue
+                else:
+                    break
 
-                if target_html_element:
-                    for script in target_html_element:
-                        if '"@type":"LocalBusiness"' in str(script):
-                            stringtojson = json.loads(str(script.string))
-                            final_clean_data = []
-                            for item in stringtojson:
-                                clean_data = {
-                                    "name": item.get('name' , "N/A"),
-                                    "url": item.get('url' , "N/A"),
-                                    "postal_code": item.get('address' , {}).get('postalCode' , "N/A"),
-                                    "country": item.get('address' , {}).get('addressCountry' , "N/A"),
-                                    "street": item.get('address' , {}).get('streetAddress' , "N/A"),
-                                    "rating": item.get('aggregateRating' , {}).get('ratingValue' , "N/A"),
-                                    "review_count": item.get('aggregateRating' , {}).get('reviewCount' , "N/A"),
-                                    "telephone": item.get('telephone' , "N/A"),
-                                    "opening_hours": item.get('openingHours' , "N/A"),
-                                    "location_name": item.get('address' , {}).get('addressLocality' , "N/A"),
-                                    "state_code": item.get('address' , {}).get('addressRegion' , "N/A")
-                                }
-                                final_clean_data.append(clean_data)
-                            return final_clean_data
-                        
-                return {}
+            if target_html_element:
+                for script in target_html_element:
+                    if '"@type":"LocalBusiness"' in str(script):
+                        stringtojson = json.loads(str(script.string))
+                        final_clean_data = []
+                        for item in stringtojson:
+                            clean_data = {
+                                "name": item.get('name' , "N/A"),
+                                "url": item.get('url' , "N/A"),
+                                "postal_code": item.get('address' , {}).get('postalCode' , "N/A"),
+                                "country": item.get('address' , {}).get('addressCountry' , "N/A"),
+                                "street": item.get('address' , {}).get('streetAddress' , "N/A"),
+                                "rating": item.get('aggregateRating' , {}).get('ratingValue' , "N/A"),
+                                "review_count": item.get('aggregateRating' , {}).get('reviewCount' , "N/A"),
+                                "telephone": item.get('telephone' , "N/A"),
+                                "opening_hours": item.get('openingHours' , "N/A"),
+                                "location_name": item.get('address' , {}).get('addressLocality' , "N/A"),
+                                "state_code": item.get('address' , {}).get('addressRegion' , "N/A")
+                            }
+                            final_clean_data.append(clean_data)
+                        return final_clean_data
+            return {}
         
         except requests.HTTPError as e:
             logger.error(f"get_business_list | 'yellowpages.py' | HTTP Error: {e}")
@@ -196,10 +180,10 @@ class YellowPagesScraper:
                         "extra_phone": final_extra_phone
                     }
                     return returning_data
-                elif not response.status_code == 200 and confirmed_config_data["max_attempt"] > 0:
+                elif not response.status_code == 200 and self.max_attempt > 0:
                     logger.warning(f"get_business_insight | 'yellowpages.py' | attemps : {amount+1}")
                     logger.warning(f"get_business_insight | 'yellowpages.py' | Response Status Code: {response.status_code}")
-                    sleep(confirmed_config_data["attempt_duration"])
+                    sleep(self.attempt_duration)
                     continue
                 else:
                     return {}

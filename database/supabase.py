@@ -3,27 +3,18 @@ from psycopg2 import extras , pool
 from models import BusinessListData , BusinessInsightData
 import os 
 from dotenv import load_dotenv
-import logging
+from logs.log import CustomLogger
 
 
+logger = CustomLogger().get_logger(__name__)
 load_dotenv()
-logging.basicConfig(
-    encoding='utf-8',
-    level=logging.INFO,
-    format='%(asctime)s | %(levelname)s | %(message)s',
-    handlers=[
-        logging.FileHandler('app.log'),
-        logging.StreamHandler() 
-    ]
-    )
-logger = logging.getLogger(__name__)
-
 
 class Reader:
     def __init__(self):
         self.db_pool = pool.ThreadedConnectionPool(
-            1, 10, f"postgresql://postgres.{os.getenv('DATABASE_ADDRESS')}:{os.getenv('DATABASE_PASSWORD')}@aws-1-ap-south-1.pooler.supabase.com:6543/postgres")
+            1, 100, f"postgresql://postgres.{os.getenv('DATABASE_ADDRESS')}:{os.getenv('DATABASE_PASSWORD')}@aws-1-ap-south-1.pooler.supabase.com:6543/postgres")
     
+
     def get_url_and_unique_key(self, limit_val: int):
         try:
             conn = None
@@ -65,7 +56,8 @@ class Reader:
             if conn:
                 conn.commit()
         finally:
-                conn.close()
+            if conn:
+                self.db_pool.putconn(conn)
 
     
 class Writer(Reader):
@@ -108,7 +100,8 @@ class Writer(Reader):
                 conn.commit()
                 logger.info("write_business_list | 'supabase.py' | Successfully wrote business list")
         finally:
-                conn.close()
+            if conn:
+                self.db_pool.putconn(conn)
 
     def write_business_insight(self,dict_business_insight: dict,unique_key: str):
         try:
@@ -156,4 +149,8 @@ class Writer(Reader):
                 conn.commit()
                 logger.info("write_business_insight | 'supabase.py' | Successfully wrote business list")
         finally:
-                conn.close()
+            if conn:
+                self.db_pool.putconn(conn)
+
+    def close_all_connection(self,conn):
+        return self.db_pool.closeall()
