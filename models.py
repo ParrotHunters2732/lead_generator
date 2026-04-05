@@ -52,9 +52,9 @@ class ConfigJson(BaseModel):
     write_business_insight_loop_cooldown : float =  Field(ge=0 ,strict=True , description="how long to wait per loop" , default=0)
     redo_on_fail_page: bool = Field(strict=True, description="redo on the return fail page" , default=False)
     redo_on_fail_page_attempt: int = Field(ge=0 , strict=True, description="redo on the return fail page's attempt" , default=0)
-    category: list[str] = Field(min_length=1, description = "category of business to iterate example  plumbing / dentist , etc.")
-    location: list[str] = Field(min_length=1, description="location to iterate example NYC / Sydney etc.")
-    headers: dict = Field(min_length=1, strict=True , description="headers that would be use in the request **SHOULD INCLUDE COOKIES")
+    category: str = Field(min_length=1, description = "category of business to iterate example  plumbing / dentist , etc.")
+    location: str = Field(min_length=1, description="location to iterate example NYC / Sydney etc.")
+    header: dict = Field(min_length=1, strict=True , description="header that would be use in the request **SHOULD INCLUDE COOKIES")
     amount_write_business_insight: int = Field(strict=True,gt=0,description="amount of page to run on inner extraction",default=10) 
     
 
