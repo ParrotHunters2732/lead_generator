@@ -43,8 +43,7 @@ class GetAndStoreData:
                     category,
                     location,
                     page=i,
-                    session=session,
-                    attempt=self.max_attempt
+                    session=session
                     )
                 if data == 404:
                     logger.warning("Page Not Found!")
@@ -83,8 +82,7 @@ class GetAndStoreData:
                     logger.info(f" utils.py | {GetAndStoreData.business_insight.__name__} | {pick_float:.1f}s")
                     sleep(pick_float) 
                     result = YellowPagesScraper().get_business_insight(
-                    target_url=v[0],session=session,
-                    attempt=self.max_attempt)
+                    target_url=v[0],session=session)
                     if result:
                         self.db_writer.write_business_insight(dict_business_insight=result,unique_key=v[1])
                         yield i , True
@@ -94,7 +92,7 @@ class GetAndStoreData:
                         yield i , False
                 logger.info(f" utils.py | {GetAndStoreData.business_insight.__name__} | failed page/s: {[i for i,_ in error_list]}")
                 if self.redo_on_fail_page and error_list:
-                    error_list = retry_business_insight_fail_pages(error_list, self, session)
+                    error_list = retry_business_insight_fail_pages(error_list, self, session,db_writer=self.db_writer)
                 self.db_reader.close_all_connection()
                 self.db_writer.close_all_connection()
                 return
