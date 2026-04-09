@@ -1,13 +1,11 @@
 {
-	"page_per_request": 1,
+	"page_per_request": 100,
 	"rate_min": 3.0,
-	"rate_max": 6.0,
-	"max_attempt": 2,
+	"rate_max": 6.25,
+	"max_attempt": 3,
 	"attempt_duration": 45.0,
-	"write_business_insight_on_loop": false,
-	"write_business_insight_loop_cooldown": 0,
 	"redo_on_fail_page": false,
-	"redo_on_fail_page_attempt": 1,
+	"redo_on_fail_page_attempt": 2,
 	"category": "jewelry",
 	"location": "NYC, NY",
 	"header": {
@@ -25,5 +23,5 @@
 		"Sec-Fetch-User": "?1",
 		"cookies_string": ""
 	},
-	"amount_write_business_insight": 5
+	"amount_write_business_insight": 100
 }

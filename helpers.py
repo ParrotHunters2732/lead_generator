@@ -6,6 +6,8 @@ from time import sleep
 import os
 from dotenv import load_dotenv
 from typing import Literal
+from collections import deque
+
 
 @basic_exception_handling
 def get_json_config_dict()-> dict:
@@ -39,12 +41,17 @@ def write_db_info_dotenv(address:str , password:str)->None:
         f.write(f'DATABASE_ADDRESS="{address}"\n')
         f.write(f'DATABASE_PASSWORD="{password}"')
 
+def get_newest_logs(n):
+    with open('app.log', 'r') as f:
+        return deque(f,maxlen=n)
+
+
 # ------- Streamlit Object -------
 
 def pop_ups(text)->None:
     with st.empty():
         st.write(f":material/check: {text}")
-        sleep(1.75)
+        sleep(0.75)
 
 @st.dialog("🔑 | Supabase Authentication",width="medium",on_dismiss='rerun')        
 def database_popups():
@@ -67,3 +74,6 @@ def database_popups():
             st.success("Successfully added Supabase project's info!!")
             sleep(2.5)
             return True
+
+def percentage(value:int , total:int):
+    return int((value / total) * 100)
