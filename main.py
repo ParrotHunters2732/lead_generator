@@ -1,5 +1,5 @@
 import streamlit as st
-from helpers import get_json_config_dict, write_new_config, pop_ups, database_popups, is_there_database_info, percentage, get_newest_logs
+from helpers import get_json_config_dict, write_new_config, pop_ups, database_popups, is_there_database_info, percentage, get_newest_logs,basic_exception_handling
 from logs.log import CustomLogger
 from utils import GetAndStoreData
 from database.supabase import Reader
@@ -8,9 +8,14 @@ import pandas as pd
 logger = CustomLogger().get_logger(__name__)
 
 class App:
+    @basic_exception_handling
     def __init__(self):
         confirmed_config_data = {}
         confirmed_config_data = get_json_config_dict()
+        if not is_there_database_info(mode="status"): #doesnt have database info
+            st.markdown("Enter Project info before use!!")
+            if st.button("Enter info"):
+                database_popups()
         if not confirmed_config_data:
             logger.critical("'Config.json'doesnt have data")
             st.stop()
@@ -32,7 +37,8 @@ class App:
             self.cookies = confirmed_config_data.get("header",{}).get("cookies_string")
             self.amount_write_business_insight = confirmed_config_data.get("amount_write_business_insight",None)
             self.db_reader = Reader()
-        
+    
+    @basic_exception_handling
     def home_page(self):
         st.title("🏠 | Home")
         st.divider()
@@ -82,6 +88,7 @@ class App:
                 \n**Error Documentation**: A "Dictionary of Errors" that explains what specific log messages mean and how to fix them.
                 \n**The Help Page**: serves as a comprehensive manual for the suite, covering everything from initial setup (Supabase integration and header authentication) to operational logic like rate limiting and error recovery. It establishes critical rules for IP safety and database integrity while providing a legal framework regarding user responsibility and compliance. Essentially, it is designed to turn new users into self-sufficient operators who can safely extract, manage, and query data without technical friction.
                 \n---""")
+    @basic_exception_handling
     def scraper_page(self):
         with st.container():
             st.title("💻 | Scrape Bussines Data")
@@ -126,6 +133,7 @@ class App:
             with Configuration:
                     st.json(self.all_config)
 
+    @basic_exception_handling
     def config(self):
         st.title("⚙️ | Configuration")
         with st.popover(label="Current Configuration",width="content"):
@@ -196,7 +204,7 @@ class App:
         st.divider()
 
 
-
+    @basic_exception_handling
     def data_page(self):
         st.title("📊 | Data")
         st.divider()
@@ -318,6 +326,7 @@ class App:
                     df
                 else:
                     st.write("Return 0 row.")
+    @basic_exception_handling
     def log_page(self):
         st.title("📝 | Logs")
         st.divider()
@@ -330,6 +339,7 @@ class App:
             for line in result:
                 st.write(line)
         
+    @basic_exception_handling
     def help(self):
         st.title("ℹ️ | Guide")
         st.divider()
