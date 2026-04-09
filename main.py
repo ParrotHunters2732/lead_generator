@@ -234,7 +234,7 @@ class App:
                 col2.subheader(body=(f'{perfect_leads} /s'))
                 col2.subheader(body=(f'{legit_bid} /s'))
         with data_selector:
-            option = st.selectbox(label="which",options=("Business list","Business insight"))
+            option = st.selectbox(label="Select one [Business List / Business insight]",options=("Business list","Business insight"))
             col1ds , col2ds , col3ds , col4ds , col5ds , col6ds = st.columns(6)
             if option == "Business list":
                 with col1ds.popover(label="Filter"):
