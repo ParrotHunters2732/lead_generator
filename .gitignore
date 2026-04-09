@@ -1,7 +1,4 @@
 .env
 __pycache__
-requirements.txt
-test.py
 app.log
 config.json
-t.py

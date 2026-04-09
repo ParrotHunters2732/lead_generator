@@ -216,7 +216,7 @@ class App:
                 col1.subheader("Missing percentage:")
                 col1.subheader("Filled percentage :")
                 col1.subheader("Perfect lead :")
-                col1.subheader("Legit Insight info :")
+                col1.subheader("legit insight data:")
             with col2: 
                 col2.subheader(body=(f'{total_business_list} /s'))
                 col2.subheader(body=(f'{total_business_insight} /s'))
