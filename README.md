@@ -287,7 +287,3 @@ This tool is designed for internal lead generation purposes. Unauthorized redist
 Use at your own risk.
 
 ---
-
-## License
-
-MIT License — see LICENSE file for details.
