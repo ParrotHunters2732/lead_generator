@@ -32,8 +32,8 @@ class BusinessInsightData(BaseModel):
     email: Optional[str] = None
     payment: Optional[str] = None
     language: Optional[str] = None
-    extra_links: Optional[str] | list= None
-    extra_phone: Optional[str] | list = None
+    extra_links: Optional[str | list] = None
+    extra_phone: Optional[str | list] = None
     
     @field_validator('*', mode='before')
     @classmethod

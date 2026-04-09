@@ -58,13 +58,13 @@ class App:
                 \n**Traceability**: Every entry is marked with a Timestamp so you know exactly when the lead was discovered.
                 \n---""")
         st.subheader("**Extract Business Insights (The Deep Dive)**")
-        ("""
+        st.markdown("""
                 \n**Contact Expansion**: Beyond basic info, you can extract Emails, Extra Phone Numbers, and Extra Links (social media or secondary sites).
                 \n**Business Profile**: Pull the full Description, Category classifications, and supported Languages.
                 \n**Commercial Data**: Pull Payment Methods accepted by the business and Pull the official Website and Physical Address.
                 \n---""")
         st.subheader("**View Config (The System Monitor)**")
-        ("""
+        st.markdown("""
                 \nTo ensure accuracy, this tab displays a Live Snapshot of your current scraper settings.
                 \n**Verification**: Check your current Configuration, location, or category settings before starting a run.
                 \n**Read-Only Security**: This tab is locked for editing to prevent accidental changes while a process is running; all adjustments must be made in the Configuration page.
@@ -124,7 +124,7 @@ class App:
                     col2bi_placehold.empty()
 
             with Configuration:
-                    self.all_config
+                    st.json(self.all_config)
 
     def config(self):
         st.title("⚙️ | Configuration")
@@ -380,7 +380,7 @@ class App:
         \n""")
         st.divider()
         st.subheader("Initial Header Setup")
-        ("""
+        st.markdown("""
         \nStep 1: Open YellowPages.com and right-click to Inspect > Network tab.
         \nStep 2: Refresh the page and select the first request with a 200 Status Code.
         \nStep 3: Copy the data from the Request Headers section.
@@ -388,14 +388,14 @@ class App:
         \nStep 5: Save your configuration once to initialize the session.
         \n---""")
         st.subheader("Browser Authentication (Recommended)")
-        ("""
+        st.markdown("""
         \nStep 3.1: For better stability, download the Cookie Editor browser extension.
         \nStep 3.2: Go to the YellowPages website and open the extension.
         \nStep 3.3: Select Export as Header String to copy your active session data.
         \nStep 3.4: Paste this into your configuration and click Save. 
         \n---""")
         st.subheader("Final Check")
-        ("""
+        st.markdown("""
         Once your database is linked and your headers are updated, you are ready to start your first scrape from the Scrape Page.\n
 """)
         st.divider()
@@ -409,18 +409,18 @@ class App:
         \n**Attempt Duration**: The maximum time in seconds the system waits for a response during a retry attempt.
         \n---""")
         st.subheader("Error Recovery & Session Cleanup")
-        ("""
+        st.markdown("""
         \n**Redo on Fail Page**: When enabled, the system compiles a list of all pages that failed during the initial run and retries them after the session ends.
         \n**Redo Attempt**: Specifies how many times the system should try to recover those specific failed pages during the cleanup phase.
         \n---""")
         st.subheader("Targeting & Scope")
-        ("""
+        st.markdown("""
         \n**Category**: The business niche or industry keyword (e.g., jewelry).\n
         \n**Location**: The geographic area targeted for the search (e.g., NYC, NY).\n
         \n**Amount of Page Insight**: The total number of businesses to deep-scan for detailed contact and profile information.\n 
         \n---""")
         st.subheader("Network Identity")
-        ("""
+        st.markdown("""
         \n**Header**: The technical fingerprint (User-Agent and Cookies) used to verify the connection and maintain a stable session with the source.\n
         \n---""")
         st.header("📜 | Rules Of Thumbs")

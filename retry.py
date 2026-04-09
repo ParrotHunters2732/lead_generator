@@ -48,7 +48,7 @@ def retry_business_list_fail_pages(error_list: list, self, category, location, s
     return retry_on_fail_page(error_list, self, "business_list", execute, write_success)
 
 
-def retry_business_insight_fail_pages(error_list: list, self, session):
+def retry_business_insight_fail_pages(error_list: list, self, session,db_writer: Writer):
     def execute(item):
         num, url_unq = item
         return YellowPagesScraper().get_business_insight(
@@ -59,6 +59,6 @@ def retry_business_insight_fail_pages(error_list: list, self, session):
 
     def write_success(result, item):
         _, url_unq = item
-        Writer().write_business_insight(dict_business_insight=result, unique_key=url_unq[1])
+        db_writer.write_business_insight(dict_business_insight=result, unique_key=url_unq[1])
 
     return retry_on_fail_page(error_list, self, "business_insight", execute, write_success)

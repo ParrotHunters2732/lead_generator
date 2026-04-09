@@ -1,5 +1,4 @@
 from functools import wraps
-from time import perf_counter
 from logs.log import CustomLogger
 from requests import HTTPError , Timeout , ConnectionError
 from psycopg2 import ProgrammingError , OperationalError , IntegrityError , Error

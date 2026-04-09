@@ -32,6 +32,8 @@ def is_there_database_info(mode: Literal["status","hidden"])-> bool | str:
     if mode == "status":
         return db_address is not None and db_password is not None
     elif mode == "hidden":
+        if not db_address or not db_password:
+            return False
         return db_address , (len(db_password) * "*")
     else:
         raise ValueError("| is_there_database_info | only takes two type of argument which are 'status' / 'hidden'")
@@ -64,7 +66,7 @@ def database_popups():
     st.text_input(label="project's password",type="password",key="dbpass")
     
     if st.button(label="Save"):
-        if len(st.session_state.get("dbaddr")) < 1 and len(st.session_state.get("dbpass")) < 1:
+        if len(st.session_state.get("dbaddr")) < 1 or len(st.session_state.get("dbpass")) < 1:
             st.session_state.clear()
             st.error("Unable to add Supabase project's info..")
             sleep(2.5)
