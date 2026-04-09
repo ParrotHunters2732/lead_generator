@@ -384,7 +384,7 @@ class App:
         \nStep 1: Open YellowPages.com and right-click to Inspect > Network tab.
         \nStep 2: Refresh the page and select the first request with a 200 Status Code.
         \nStep 3: Copy the data from the Request Headers section.
-        \nStep 4: Open your main file and locate Line (BLANK). Ensure the field "cookie_string": "" is present and empty. if not insert at any part of your header
+        \nStep 4: Open your main file and locate Line (163.). Ensure the field "cookie_string": "" is present and empty. if not insert at any part of your header
         \nStep 5: Save your configuration once to initialize the session.
         \n---""")
         st.subheader("Browser Authentication (Recommended)")
