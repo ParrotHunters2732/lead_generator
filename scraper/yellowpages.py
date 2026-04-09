@@ -14,7 +14,7 @@ class YellowPagesScraper:
         self.attempt_duration = confirmed_config_data["attempt_duration"]
         self.max_attempt = confirmed_config_data["max_attempt"]
 
-    def get_business_list(self , category: str , location: tuple , page: int, session: requests.session,attempt: int)->dict: 
+    def get_business_list(self , category: str , location: tuple , page: int, session: requests.session)->dict: 
         base_url = 'https://www.yellowpages.com/search?'
         params = {
             "search_terms": category,
@@ -25,7 +25,7 @@ class YellowPagesScraper:
         session.headers.update(self.headers)
         target_html_element = None
         try:       
-            for amount in range(attempt+1):
+            for amount in range(self.max_attempt+1):
                 response = session.get(url=base_url,params=params)
                 if response.status_code == 200:
                     content = response.content
@@ -33,12 +33,12 @@ class YellowPagesScraper:
                     target_html_element = soup.find_all('script', type="application/ld+json")
                     break
                 elif response.status_code == 404:
-                    logger.warning(f"get_business_list | 'yellowpages.py' | attemps : {amount+1}")
+                    logger.warning(f"get_business_list | 'yellowpages.py' | attemps : {amount+1}/{self.max_attempt}")
                     logger.warning(f"get_business_list | 'yellowpages.py' | Response Status Code: {response.status_code}")
                     logger.warning(f"get_business_list | 'yellowpages.py' | Response there is info about this page!")
                     return 404
-                elif attempt > 1:
-                    logger.warning(f"get_business_list | 'yellowpages.py' | attemps : {amount+1}")
+                elif self.max_attempt > 1:
+                    logger.warning(f"get_business_list | 'yellowpages.py' | attemps : {amount+1}/{self.max_attempt}")
                     logger.warning(f"get_business_list | 'yellowpages.py' | Response Status Code: {response.status_code}")
                     sleep(self.attempt_duration)
                     continue
@@ -105,10 +105,10 @@ class YellowPagesScraper:
             return "N/A"
     
 
-    def get_business_insight(self,session: requests.session ,target_url: str, attempt: int)->dict:
+    def get_business_insight(self,session: requests.session ,target_url: str)->dict:
         session.headers.update(self.headers)
         try:
-            for amount in range(attempt+1):
+            for amount in range(self.max_attempt+1):
                 response = session.get(url=target_url)
                 if response.status_code == 200:
                     content = response.content
@@ -181,7 +181,7 @@ class YellowPagesScraper:
                     }
                     return returning_data
                 elif not response.status_code == 200 and self.max_attempt > 0:
-                    logger.warning(f"get_business_insight | 'yellowpages.py' | attemps : {amount+1}")
+                    logger.warning(f"get_business_insight | 'yellowpages.py' | attemps : {amount+1}/{self.max_attempt}")
                     logger.warning(f"get_business_insight | 'yellowpages.py' | Response Status Code: {response.status_code}")
                     sleep(self.attempt_duration)
                     continue

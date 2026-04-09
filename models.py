@@ -48,8 +48,6 @@ class ConfigJson(BaseModel):
     rate_max : float = Field(gt=0 , strict=True, description="maximum rate per requests" , default=1) 
     max_attempt : int = Field(ge=0 , strict=True, description="amount of attempts for request" , default=0)
     attempt_duration : float =  Field(ge=0 , strict=True, description="how long to wait per requests" , default=0)
-    write_business_insight_on_loop: bool = Field(strict=True, description="loop on 'write_business_insight' till null" , default=False)
-    write_business_insight_loop_cooldown : float =  Field(ge=0 ,strict=True , description="how long to wait per loop" , default=0)
     redo_on_fail_page: bool = Field(strict=True, description="redo on the return fail page" , default=False)
     redo_on_fail_page_attempt: int = Field(ge=0 , strict=True, description="redo on the return fail page's attempt" , default=0)
     category: str = Field(min_length=1, description = "category of business to iterate example  plumbing / dentist , etc.")
