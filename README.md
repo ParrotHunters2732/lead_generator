@@ -1,4 +1,4 @@
-# YellowPages Business Intelligence Scraper
+# YellowPages Business Scraper
 
 A production-grade business data extraction and management system built with Python, Streamlit, and Supabase. Scrapes, validates, stores, and queries business data from YellowPages at scale.
 
