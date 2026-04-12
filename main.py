@@ -226,13 +226,13 @@ class App:
                 col1.subheader("Perfect lead :")
                 col1.subheader("legit insight data:")
             with col2: 
-                col2.subheader(body=(f'{total_business_list} /s'))
-                col2.subheader(body=(f'{total_business_insight} /s'))
-                col2.subheader(body=(f'{total_missing_bid} /s'))
+                col2.subheader(body=(f'{total_business_list:,}'))
+                col2.subheader(body=(f'{total_business_insight:,}'))
+                col2.subheader(body=(f'{total_missing_bid:,}'))
                 col2.subheader(body=(f'{missing_percentage:.2f} %'))
                 col2.subheader(body=(f'{filled_percentage:.2f} %'))
-                col2.subheader(body=(f'{perfect_leads} /s'))
-                col2.subheader(body=(f'{legit_bid} /s'))
+                col2.subheader(body=(f'{perfect_leads:,}'))
+                col2.subheader(body=(f'{legit_bid:,}'))
         with data_selector:
             option = st.selectbox(label="Select one [Business List / Business insight]",options=("Business list","Business insight"))
             col1ds , col2ds , col3ds , col4ds , col5ds , col6ds = st.columns(6)
